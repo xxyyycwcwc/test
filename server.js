@@ -17,7 +17,7 @@ app.post('/submit-survey', (req, res) => {
 
     // 构建日志条目
     const timestamp = new Date().toISOString();
-    const logEntry = `${timestamp} - Survey Data:\n`;
+    let logEntry = `${timestamp} - Survey Data:\n`;
 
     // 记录每个问题及其答案
     const questions = [
