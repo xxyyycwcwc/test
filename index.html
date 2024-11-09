@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>胶王争霸赛</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+
+        .question {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .options {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* 对齐选择框 */
+            width: 100%;
+        }
+
+        .option {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .option label {
+            margin-left: 10px;
+        }
+
+        .active {
+            display: block;
+        }
+
+        input[type="radio"], input[type="checkbox"] {
+            accent-color: rgb(0, 255, 179); /* 设置勾选蓝点的颜色 */
+        }
+    </style>
+</head>
+<body>
+    <h1>问卷调查</h1>
+
+    <div id="question1" class="question active">
+        <p>1. 你喜欢打胶吗？</p>
+        <div class="options">
+            <div class="option">
+                <input type="radio" name="q1" value="喜欢" onclick="showMessage('你真是个诚实的孩子！', 'question2', this)">
+                <label>喜欢</label>
+            </div>
+            <div class="option">
+                <input type="radio" name="q1" value="不喜欢" onclick="showMessage('请诚实答题，不要说谎！', 'error1', this)">
+                <label>不喜欢</label>
+            </div>
+            <div class="option">
+                <input type="radio" name="q1" value="超级喜欢" onclick="showMessage('你真是个诚实的孩子！', 'question2', this)">
+                <label>超级喜欢</label>
+            </div>
+        </div>
+    </div>
+
+    <div id="question2" class="question">
+        <p>2. 你每天要打多少胶？</p>
+        <div class="options">
+            <div class="option">
+                <input type="radio" name="q2" value="3-5次" onclick="showMessage('打得少了！', 'question3', this)">
+                <label>3-5次</label>
+            </div>
+            <div class="option">
+                <input type="radio" name="q2" value="10次起步" onclick="showMessage('打得挺多！', 'question3', this)">
+                <label>10次起步</label>
+            </div>
+            <div class="option">
+                <input type="radio" name="q2" value="500ml+" onclick="showMessage('胶王nb！', 'question3', this)">
+                <label>500ml+</label>
+            </div>
+        </div>
+    </div>
+
+    <div id="question3" class="question">
+        <p>3. 你喜欢在什么时间段打胶？（可多选）</p>
+        <div class="options">
+            <div class="option">
+                <input type="checkbox" name="t1" value="起床前" onclick="handleCheckboxSelection(this)">
+                <label>起床前</label>
+            </div>
+            <div class="option">
+                <input type="checkbox" name="t1" value="午睡时" onclick="handleCheckboxSelection(this)">
+                <label>午睡时</label>
+            </div>
+            <div class="option">
+                <input type="checkbox" name="t1" value="洗澡时" onclick="handleCheckboxSelection(this)">
+                <label>洗澡时</label>
+            </div>
+            <div class="option">
+                <input type="checkbox" name="t1" value="睡觉前" onclick="handleCheckboxSelection(this)">
+                <label>睡觉前</label>
+            </div>
+            <div class="option">
+                <input type="checkbox" name="t1" value="上课时" onclick="handleCheckboxSelection(this)">
+                <label>上课时</label>
+            </div>
+        </div>
+        <button onclick="submitCheckboxSelection()">参与胶王争霸</button>
+    </div>
+
+    <script>
+        function showMessage(message, nextQuestionId, selectedOption) {
+            alert(message);
+
+            if (nextQuestionId.startsWith('error')) {
+                // 用户选择错误，重新显示当前问题
+                document.querySelector('.active').classList.remove('active');
+                document.getElementById(nextQuestionId.replace('error', 'question')).classList.add('active');
+            } else if (nextQuestionId !== 'end') {
+                // 用户选择正确，显示下一个问题
+                document.getElementById(nextQuestionId).classList.add('active');
+                document.querySelector('.active').classList.remove('active');
+            } else {
+                // 结束问卷
+                document.querySelector('.active').classList.remove('active');
+                alert('再见！');
+            }
+
+            // 设置已选择的选项为选中状态
+            selectedOption.checked = true;
+        }
+
+        function handleCheckboxSelection(checkbox) {
+            // 不需要显式地设置 checkbox.checked，浏览器会自动处理
+        }
+
+        async function submitCheckboxSelection() {
+            const checkboxes = document.querySelectorAll('input[name="t1"]:checked');
+            const selectedTimes = Array.from(checkboxes).map(checkbox => checkbox.value);
+            if (selectedTimes.length > 0) {
+                const data = {
+                    q1: document.querySelector('input[name="q1"]:checked').value,
+                    q2: document.querySelector('input[name="q2"]:checked').value,
+                    q3: selectedTimes
+                };
+
+                try {
+                    const response = await fetch('http://localhost:3000/submit-survey', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (response.ok) {
+                        alert('数据提交成功！');
+                        document.getElementById('question3').classList.remove('active');
+                        alert('你就是胶王！');
+                    } else {
+                        alert('数据提交失败，请重试。');
+                    }
+                } catch (error) {
+                    console.error('Error submitting data:', error);
+                    alert('数据提交失败，请重试。');
+                }
+            } else {
+                alert('请选择至少一个时间段！');
+            }
+        }
+    </script>
+</body>
+</html>
